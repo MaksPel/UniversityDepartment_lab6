@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments Management</title>
+    <script>
+        async function fetchDepartments() {
+            const response = await fetch('/api/Departments');
+            const departments = await response.json();
+            const list = document.getElementById('department-list');
+            list.innerHTML = '';
+            departments.forEach(department => {
+                const item = document.createElement('li');
+                item.innerHTML = `
+                            ID: ${department.departmentId},
+                            Name: ${department.name},
+                            IsGraduating: ${department.isGraduating},
+                            FacultyId: ${department.facultyId}
+                            <button onclick="editDepartment('${department.departmentId}')">Edit</button>
+                            <button onclick="deleteDepartment('${department.departmentId}')">Delete</button>
+                        `;
+                list.appendChild(item);
+            });
+        }
+
+        async function addOrUpdateDepartment() {
+            const departmentId = document.getElementById('department-id').value || null;
+            const name = document.getElementById('department-name').value;
+            const isGraduating = document.getElementById('department-isGraduating').checked;
+            const facultyId = document.getElementById('department-faculty-id').value;
+
+            const method = departmentId ? 'PUT' : 'POST';
+            const url = departmentId ? `/api/Departments/${departmentId}` : '/api/Departments';
+
+            const body = {
+                departmentId: departmentId || crypto.randomUUID(),
+                name,
+                isGraduating,
+                facultyId
+            };
+
+            await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            fetchDepartments();
+            document.getElementById('department-id').value = '';
+            document.getElementById('department-name').value = '';
+            document.getElementById('department-isGraduating').checked = false;
+            document.getElementById('department-faculty-id').value = '';
+        }
+
+        async function editDepartment(departmentId) {
+            const response = await fetch(`/api/Departments/${departmentId}`);
+            const department = await response.json();
+
+            document.getElementById('department-id').value = department.departmentId;
+            document.getElementById('department-name').value = department.name;
+            document.getElementById('department-isGraduating').checked = department.isGraduating;
+            document.getElementById('department-faculty-id').value = department.facultyId;
+        }
+
+        async function deleteDepartment(departmentId) {
+            if (confirm('Are you sure you want to delete this department?')) {
+                await fetch(`/api/Departments/${departmentId}`, {
+                    method: 'DELETE'
+                });
+
+                fetchDepartments();
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/courses.html">Courses</a> |
+            <a href="/departments.html">Departments</a> |
+            <a href="/teachers.html">Teachers</a>
+        </nav>
+    </header>
+    <h1>Departments</h1>
+    <ul id="department-list"></ul>
+    <h2>Add or Update Department</h2>
+    <form onsubmit="event.preventDefault(); addOrUpdateDepartment();">
+        <label>
+            Department ID:
+            <input type="text" id="department-id" placeholder="Leave blank to add a new department">
+        </label>
+        <br>
+        <label>
+            Name:
+            <input type="text" id="department-name" required>
+        </label>
+        <br>
+        <label>
+            Is Graduating:
+            <input type="checkbox" id="department-isGraduating">
+        </label>
+        <br>
+        <label>
+            Faculty ID:
+            <input type="text" id="department-faculty-id" required>
+        </label>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+    <script>
+        fetchDepartments();
+    </script>
+</body>
+</html>

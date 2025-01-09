@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers Management</title>
+    <script>
+        async function fetchTeachers() {
+            const response = await fetch('/api/Teachers');
+            const teachers = await response.json();
+            const list = document.getElementById('teacher-list');
+            list.innerHTML = '';
+            teachers.forEach(teacher => {
+                const item = document.createElement('li');
+                item.innerHTML = `
+                            ID: ${teacher.teacherId},
+                            Name: ${teacher.name},
+                            Surname: ${teacher.surname},
+                            Midname: ${teacher.midname},
+                            Position: ${teacher.position},
+                            Age: ${teacher.age}
+                            <button onclick="editTeacher('${teacher.teacherId}')">Edit</button>
+                            <button onclick="deleteTeacher('${teacher.teacherId}')">Delete</button>
+                        `;
+                list.appendChild(item);
+            });
+        }
+
+        async function addOrUpdateTeacher() {
+            const teacherId = document.getElementById('teacher-id').value || null;
+            const name = document.getElementById('teacher-name').value;
+            const surname = document.getElementById('teacher-surname').value;
+            const midname = document.getElementById('teacher-midname').value;
+            const position = document.getElementById('teacher-position').value;
+            const age = parseInt(document.getElementById('teacher-age').value);
+
+            const method = teacherId ? 'PUT' : 'POST';
+            const url = teacherId ? `/api/Teachers/${teacherId}` : '/api/Teachers';
+
+            const body = {
+                teacherId: teacherId || crypto.randomUUID(),
+                name,
+                surname,
+                midname,
+                position,
+                age
+            };
+
+            await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            fetchTeachers();
+            document.getElementById('teacher-id').value = '';
+            document.getElementById('teacher-name').value = '';
+            document.getElementById('teacher-surname').value = '';
+            document.getElementById('teacher-midname').value = '';
+            document.getElementById('teacher-position').value = '';
+            document.getElementById('teacher-age').value = '';
+        }
+
+        async function editTeacher(teacherId) {
+            const response = await fetch(`/api/Teachers/${teacherId}`);
+            const teacher = await response.json();
+
+            document.getElementById('teacher-id').value = teacher.teacherId;
+            document.getElementById('teacher-name').value = teacher.name;
+            document.getElementById('teacher-surname').value = teacher.surname;
+            document.getElementById('teacher-midname').value = teacher.midname;
+            document.getElementById('teacher-position').value = teacher.position;
+            document.getElementById('teacher-age').value = teacher.age;
+        }
+
+        async function deleteTeacher(teacherId) {
+            if (confirm('Are you sure you want to delete this teacher?')) {
+                await fetch(`/api/Teachers/${teacherId}`, {
+                    method: 'DELETE'
+                });
+
+                fetchTeachers();
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/courses.html">Courses</a> |
+            <a href="/departments.html">Departments</a> |
+            <a href="/teachers.html">Teachers</a>
+        </nav>
+    </header>
+    <h1>Teachers</h1>
+    <ul id="teacher-list"></ul>
+    <h2>Add or Update Teacher</h2>
+    <form onsubmit="event.preventDefault(); addOrUpdateTeacher();">
+        <label>
+            Teacher ID:
+            <input type="text" id="teacher-id" placeholder="Leave blank to add a new teacher">
+        </label>
+        <br>
+        <label>
+            Name:
+            <input type="text" id="teacher-name" required>
+        </label>
+        <br>
+        <label>
+            Surname:
+            <input type="text" id="teacher-surname" required>
+        </label>
+        <br>
+        <label>
+            Midname:
+            <input type="text" id="teacher-midname" required>
+        </label>
+        <br>
+        <label>
+            Position:
+            <input type="text" id="teacher-position" required>
+        </label>
+        <br>
+        <label>
+            Age:
+            <input type="number" id="teacher-age" min="18" max="100" required>
+        </label>
+        <br>
+        <button type="submit">Save</button>
+    </form>
+    <script>
+        fetchTeachers();
+    </script>
+</body>
+</html>
